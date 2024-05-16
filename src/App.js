@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./App.css";
 import { nanoid } from "nanoid";
+import EditRow from "./components/EditRow";
+import ReadRow from "./components/ReadRow";
 
 const data = [
   {
@@ -60,18 +62,68 @@ function App() {
       email: formData.add.email,
     };
 
+    console.log("New Contact Added");
     setContacts((prevContacts) => [...prevContacts, newContact]);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      add: {
+        name: "",
+        age: "",
+        email: "",
+      },
+    }));
   };
 
-  const handleDeleteClick = (contactId) => {
-    const newContacts = contacts.filter((contact) => contact.id !== contactId);
+  const handleEditFormSubmit = (e) => {
+    e.preventDefault();
+
+    const editedContact = {
+      id: editContactId,
+      name: formData.edit.name,
+      age: formData.edit.age,
+      email: formData.edit.email,
+    };
+
+    const updatedContacts = contacts.map((contact) =>
+      contact.id === editContactId ? editedContact : contact
+    );
+
+    console.log("Edit Saved");
+    setContacts(updatedContacts);
+    setEditContactId(null);
+  };
+
+  const handleEditClick = (e, contact) => {
+    e.preventDefault();
+    setEditContactId(contact.id);
+
+    const editedFormValues = {
+      name: contact.name,
+      age: contact.age,
+      email: contact.email,
+    };
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      edit: editedFormValues,
+    }));
+  };
+
+  const handleDeleteClick = (id) => {
+    const newContacts = contacts.filter((contact) => contact.id !== id);
+    console.log("Contact Deleted");
     setContacts(newContacts);
+  };
+
+  const handleCancelClick = () => {
+    setEditContactId(null);
   };
 
   return (
     <div className="App">
       <h2>Hello Dude</h2>
-      <form>
+      <form onSubmit={handleEditFormSubmit}>
         <table>
           <thead>
             <tr>
@@ -82,23 +134,26 @@ function App() {
           </thead>
 
           <tbody>
-            {contacts.map((data) => (
-              <tr key={data.id}>
-                <td>{data.name}</td>
-                <td>{data.age}</td>
-                <td>{data.email}</td>
-                <td>
-                  <button>Edit</button>
-                  <button
-                    type="button"
-                    data-testid={`deleteBtn${data.id}`}
-                    onClick={() => handleDeleteClick(data.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {contacts.map((contact) =>
+              editContactId === contact.id ? (
+                <EditRow
+                  key={contact.id}
+                  contact={contact}
+                  formData={formData}
+                  setFormData={setFormData}
+                  handleFormChange={handleFormChange}
+                  handleEditClick={handleEditClick}
+                  handleCancelClick={handleCancelClick}
+                />
+              ) : (
+                <ReadRow
+                  key={contact.id}
+                  contact={contact}
+                  handleEditClick={handleEditClick}
+                  handleDeleteClick={handleDeleteClick}
+                />
+              )
+            )}
           </tbody>
         </table>
       </form>
@@ -132,3 +187,23 @@ function App() {
 }
 
 export default App;
+
+// const handleEditFormSubmit = (e, id) => {
+//   e.preventDefault();
+
+//   setContacts((prevContacts) =>
+//     prevContacts.map((contact) =>
+//       contact.id === id
+//         ? {
+//             ...contact,
+//             name: formData.edit.name,
+//             age: formData.edit.age,
+//             email: formData.edit.email,
+//           }
+//         : contact
+//     )
+//   );
+
+//   setEditContactId(null);
+//   console.log("Edit Saved");
+// };
